@@ -355,15 +355,46 @@
       var lng = data.lng != null ? Number(data.lng) : null;
       var pin = document.getElementById('mapPin');
       if (lat != null && lng != null) {
-        var x = ((lng - 73.5) / 61.5) * 100;
-        var y = ((53.5 - lat) / 35.5) * 100;
-        x = Math.max(5, Math.min(95, x));
-        y = Math.max(5, Math.min(95, y));
-        pin.style.left = x + '%';
-        pin.style.top = y + '%';
+        var mapX = ((lng - 73.5) / 61.5) * 100;
+        var mapY = ((53.5 - lat) / 35.5) * 100;
+        mapX = Math.max(5, Math.min(95, mapX));
+        mapY = Math.max(5, Math.min(95, mapY));
+        pin.dataset.mapX = mapX;
+        pin.dataset.mapY = mapY;
         pin.style.display = 'block';
+        updateMapPinPosition();
       } else {
         pin.style.display = 'none';
+      }
+    }
+
+    function updateMapPinPosition() {
+      var wrap = document.getElementById('mapWrap');
+      var img = document.getElementById('chinaMapImg');
+      var pin = document.getElementById('mapPin');
+      if (!wrap || !img || !pin || !pin.dataset.mapX || pin.style.display === 'none') return;
+      var mapX = parseFloat(pin.dataset.mapX, 10);
+      var mapY = parseFloat(pin.dataset.mapY, 10);
+      var wr = wrap.getBoundingClientRect();
+      var nw = img.naturalWidth || 0;
+      var nh = img.naturalHeight || 0;
+      if (nw && nh) {
+        var scale = Math.min(wr.width / nw, wr.height / nh);
+        var cw = nw * scale;
+        var ch = nh * scale;
+        var ox = (wr.width - cw) / 2;
+        var oy = (wr.height - ch) / 2;
+        var px = ox + cw * mapX / 100;
+        var py = oy + ch * mapY / 100;
+        pin.style.left = px + 'px';
+        pin.style.top = py + 'px';
+        pin.style.right = 'auto';
+        pin.style.bottom = 'auto';
+      } else {
+        pin.style.left = mapX + '%';
+        pin.style.top = mapY + '%';
+        pin.style.right = 'auto';
+        pin.style.bottom = 'auto';
       }
     }
 
@@ -427,6 +458,12 @@
 
     btnDraw.addEventListener('click', draw);
     btnHeader.addEventListener('click', draw);
+
+    var chinaMapImg = document.getElementById('chinaMapImg');
+    if (chinaMapImg) {
+      chinaMapImg.addEventListener('load', updateMapPinPosition);
+    }
+    window.addEventListener('resize', updateMapPinPosition);
   </script>
 </body>
 </html>
