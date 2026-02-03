@@ -314,12 +314,16 @@
     const btnHeader = document.getElementById('btnHeader');
 
     function setResult(data) {
+      if (!data || (data && !data.name && !data.error)) {
+        showError('数据异常', '请刷新重试或确认后端已执行 npm run seed');
+        return;
+      }
       var mapImg = document.getElementById('chinaMapImg');
       var mapFallback = document.getElementById('chinaMapFallback');
       if (mapImg) { mapImg.dataset.try = '0'; mapImg.src = '/assets/china-map.png'; mapImg.style.display = ''; }
       if (mapFallback) mapFallback.style.display = 'none';
-      document.getElementById('resultCityName').textContent = data.name;
-      document.getElementById('foodName').textContent = data.food;
+      document.getElementById('resultCityName').textContent = data.name || '—';
+      document.getElementById('foodName').textContent = data.food || '—';
       document.getElementById('foodNameEn').textContent = data.food_name_en ? `(${data.food_name_en})` : '';
       const foodImg = document.getElementById('foodImg');
       const foodIcon = document.getElementById('foodIcon');
@@ -331,7 +335,7 @@
         foodImg.style.display = 'none';
         foodIcon.style.display = 'block';
       }
-      document.getElementById('hotelName').textContent = data.hotel;
+      document.getElementById('hotelName').textContent = data.hotel || '—';
       document.getElementById('hotelNameEn').textContent = data.hotel_name_en ? `(${data.hotel_name_en})` : '';
       document.getElementById('hotelPrice').textContent = '¥' + (data.price || 0) + '/晚';
       const hotelImg = document.getElementById('hotelImg');
@@ -394,16 +398,22 @@
         if (!res.ok) {
           showError(data.error || '请求失败', '请先执行 npm run seed');
         } else {
-          setResult(data);
-          screenInitial.classList.add('hidden');
-          screenResult.classList.add('visible');
-          btnHeader.style.display = 'block';
+          try {
+            setResult(data);
+          } catch (err) {
+            showError('展示失败', err && err.message ? err.message : '请刷新重试');
+          }
         }
+        screenInitial.classList.add('hidden');
+        screenResult.classList.add('visible');
+        btnHeader.style.display = 'block';
+        screenResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (e) {
         showError('无法连接后端', '请用浏览器打开 http://localhost:3000 并确保已执行 npm start');
         screenInitial.classList.add('hidden');
         screenResult.classList.add('visible');
         btnHeader.style.display = 'block';
+        screenResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } finally {
         btnDraw.disabled = false;
         btnDraw.textContent = '开始随机!';
